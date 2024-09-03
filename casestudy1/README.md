@@ -1,19 +1,25 @@
--- 1. What is the total amount each customer spent at the restaurant?
+## -- 1. What is the total amount each customer spent at the restaurant?
 
+### Query:
+```sql
 SELECT SUM(menu.price) AS total_amount, sales.customer_id
 FROM dannys_diner.sales sales
 	JOIN dannys_diner.menu menu
    ON sales.product_id = menu.product_id
 GROUP BY sales.customer_id
+```
+## -- 2. How many days has each customer visited the restaurant?
 
--- 2. How many days has each customer visited the restaurant?
-
+### Query:
+```sql
 SELECT customer_id, COUNT(DISTINCT sales.order_date) AS total_visits
 FROM dannys_diner.sales sales
 GROUP BY customer_id
+```
+## -- 3. What was the first item from the menu purchased by each customer?
 
--- 3. What was the first item from the menu purchased by each customer?
-
+### Query:
+```sql
 WITH rank_cte AS (
 SELECT customer_id, menu.product_id, product_name, order_date,
 ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date ASC) AS rank_item
@@ -25,9 +31,12 @@ JOIN dannys_diner.sales sales
 SELECT customer_id, product_name
 FROM rank_cte 
 WHERE rank_item = 1
+```
 
--- 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
+## -- 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
+### Query:
+```sql
 SELECT 
   menu.product_name,
   COUNT(sales.product_id) AS most_purchased_item
@@ -37,9 +46,12 @@ INNER JOIN dannys_diner.menu
 GROUP BY menu.product_name
 ORDER BY most_purchased_item DESC
 LIMIT 1
+```
 
--- 5. Which item was the most popular for each customer?
+## -- 5. Which item was the most popular for each customer?
 
+### Query:
+```sql
 WITH cte AS(
 SELECT 
   sales.customer_id,
@@ -57,10 +69,12 @@ ORDER BY customer_id, purchased_count
 SELECT customer_id, product_name, purchased_count
 FROM cte
 WHERE rank = 1
+```
 
+## -- 6. Which item was purchased first by the customer after they became a member?
 
--- 6. Which item was purchased first by the customer after they became a member?
-
+### Query:
+```sql
 WITH rank_cte AS (
 SELECT sales.customer_id, menu.product_id, product_name, order_date,
 ROW_NUMBER() OVER (PARTITION BY sales.customer_id ORDER BY order_date ASC) AS rank_item
@@ -76,10 +90,12 @@ WHERE order_date > join_date
 SELECT customer_id, product_name
 FROM rank_cte 
 WHERE rank_item = 1
+```
 
+## -- 7. Which item was purchased just before the customer became a member?
 
--- 7. Which item was purchased just before the customer became a member?
-
+### Query:
+```sql
 WITH rank_cte AS (
 SELECT sales.customer_id, menu.product_id, product_name, order_date,
 ROW_NUMBER() OVER (PARTITION BY sales.customer_id ORDER BY order_date DESC) AS rank_item
@@ -95,9 +111,12 @@ WHERE order_date < join_date
 SELECT customer_id, product_name
 FROM rank_cte 
 WHERE rank_item = 1
+```
 
--- 8. What is the total items and amount spent for each member before they became a member?
+## -- 8. What is the total items and amount spent for each member before they became a member?
 
+### Query:
+```sql
 SELECT sales.customer_id,
 COUNT(product_name) AS total_items_count,
 SUM(price) AS total_amount_spent
@@ -109,9 +128,12 @@ JOIN dannys_diner.members
 WHERE order_date < join_date
 GROUP BY sales.customer_id
 ORDER BY sales.customer_id
+```
 
--- 9.  If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+## -- 9.  If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
 
+### Query:
+```sql
 WITH cte AS (
 SELECT sales.customer_id, menu.product_name,
 SUM(price) AS total_amount_spent
@@ -135,10 +157,12 @@ SELECT customer_id, SUM(points) AS total_points
 FROM points_cte
 GROUP BY customer_id
 ORDER BY customer_id
+```
 
+## -- 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
 
--- 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
-
+### Query:
+```sql
 WITH cte AS(
 SELECT join_date + INTERVAL '6 days' AS add_6_days, join_date, sale.order_date, sale.customer_id, price, menu.product_name, menu.product_id
 FROM dannys_diner.sales sale
@@ -163,7 +187,7 @@ SELECT customer_id, SUM(points) as total_points
 FROM points_cte
 GROUP BY customer_id
 ORDER BY customer_id
-
+```
 
 
 
